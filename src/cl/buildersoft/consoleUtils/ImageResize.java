@@ -32,26 +32,31 @@ public class ImageResize {
 			path = fixPath(path);
 			destiny = fixPath(destiny);
 
-			if (pathExists(path) || pathExists(destiny)) {
-				File pathO = new File(path);
-				if (!pathO.exists()) {
-					System.out.println(String.format("Path '%s' not exists", path));
-				} else {
-					String[] files = pathO.list();
-					for (String file : files) {
-						// System.out.println("File:'" + file + "'");
-						if (isFile(path, file)) {
-							try {
-								resizeOneFile(path, file, destiny);
-							} catch (Exception e) {
-								System.err.println(String.format("Error procesing '%s'", path + file));
-								e.printStackTrace();
+			if (path.equalsIgnoreCase(destiny)) {
+				System.out.println(String.format("Paths '%s' and '%s' must be diferentes", path, destiny));
+			} else {
+
+				if (pathExists(path) && pathExists(destiny)) {
+					File pathO = new File(path);
+					if (!pathO.exists()) {
+						System.out.println(String.format("Path '%s' not exists", path));
+					} else {
+						String[] files = pathO.list();
+						for (String file : files) {
+							// System.out.println("File:'" + file + "'");
+							if (isFile(path, file)) {
+								try {
+									resizeOneFile(path, file, destiny);
+								} catch (Exception e) {
+									System.err.println(String.format("Error procesing '%s'", path + file));
+									e.printStackTrace();
+								}
+							} else {
+								System.out.println(String.format("Ignored '%s'", path + file));
 							}
-						} else {
-							System.out.println(String.format("Ignored '%s'", path + file));
 						}
+						System.out.println("Process Finish");
 					}
-					System.out.println("Process Finish");
 				}
 			}
 		}
@@ -93,7 +98,7 @@ public class ImageResize {
 
 				BufferedImage resizeImageJpg = resizeImage(w, h, image, type);
 
-				ImageIO.write(resizeImageJpg, format, new File(destiny + "_" + fileName));
+				ImageIO.write(resizeImageJpg, format, new File(destiny + fileName));
 
 				System.out.println("Done: " + fn);
 			}
@@ -105,7 +110,7 @@ public class ImageResize {
 	private void copyFile(String path, String fileName, String destiny) throws IOException {
 		File f1 = new File(path + fileName);
 
-		File f2 = new File(destiny + "_" + fileName);
+		File f2 = new File(destiny + fileName);
 		copyFileUsingStream(f1, f2);
 	}
 
