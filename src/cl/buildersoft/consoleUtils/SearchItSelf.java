@@ -3,6 +3,7 @@ package cl.buildersoft.consoleUtils;
 import cl.buildersoft.consoleUtils.bean.MyFile;
 
 import java.io.File;
+import java.io.FileFilter;
 import java.io.FileInputStream;
 import java.io.InputStream;
 import java.security.MessageDigest;
@@ -23,6 +24,8 @@ public class SearchItSelf {
 
 	public static void main(String[] args) {
 		Long start = Long.valueOf(System.currentTimeMillis());
+		Boolean showDuplicated = false;
+		String pattern = "*.*";
 		if (DEV_MODE.booleanValue()) {
 			args = new String[2];
 			args[0] = "C:\\MisArchivos\\RESPALDO\\Descargas\\keyfinder";
@@ -33,6 +36,14 @@ public class SearchItSelf {
 		if (folder == null) {
 			return;
 		}
+
+		if (args.length >= 2) {
+			showDuplicated = Boolean.parseBoolean(args[1]);
+		}
+		if (args.length >= 3) {
+			pattern = args[2];
+		}
+
 		Map<Long, List<MyFile>> sourceMap = new HashMap<Long, List<MyFile>>();
 		// Map<Long, List<MyFile>> targetMap = null;
 		try {
@@ -43,7 +54,7 @@ public class SearchItSelf {
 			Set<Long> sizeSet = sourceMap.keySet();
 			for (Long size : sizeSet) {
 				List<MyFile> source = (List<MyFile>) sourceMap.get(size);
-				listSources(source, sourceMap);
+				listSources(source, sourceMap, showDuplicated);
 			}
 
 		} catch (Exception e) {
@@ -83,13 +94,14 @@ public class SearchItSelf {
 		return result;
 	}
 
-	private static void listSources(List<MyFile> source, Map<Long, List<MyFile>> targetMap) throws Exception {
+	private static void listSources(List<MyFile> source, Map<Long, List<MyFile>> targetMap, Boolean showDuplicated)
+			throws Exception {
 		for (MyFile myFile : source) {
-			listDuplicated(myFile, targetMap);
+			listDuplicated(myFile, targetMap, showDuplicated);
 		}
 	}
 
-	private static void listDuplicated(MyFile myFile, Map<Long, List<MyFile>> targetMap) throws Exception {
+	private static void listDuplicated(MyFile myFile, Map<Long, List<MyFile>> targetMap, Boolean showDuplicated) throws Exception {
 		List<MyFile> target = (List<MyFile>) targetMap.get(myFile.getSize());
 		if (target != null) {
 			Boolean firstLoop = true;
@@ -119,7 +131,9 @@ public class SearchItSelf {
 
 					if ((toBeShow.booleanValue()) && (!showedPair.contains(sourcePlusTarget))) {
 						if (firstLoop.booleanValue()) {
-							System.out.println("## " + sourceFile);
+							if (!showDuplicated) {
+								System.out.println("## " + sourceFile);
+							}
 							System.out.println("-- " + targetFile);
 							firstLoop = false;
 						}
@@ -146,6 +160,8 @@ public class SearchItSelf {
 		} else {
 			File source = new File(path);
 
+//			FileFilter ; 
+			
 			File[] files = source.listFiles();
 
 			for (File file : files) {
@@ -193,8 +209,12 @@ public class SearchItSelf {
 		String out = null;
 		String source = null;
 
-		if (args.length != 1) {
-			System.out.println("Indique una carpeta");
+		if (args.length < 1 || args.length > 3) {
+			System.out.println("Parametros:");
+			System.out.println("Path");
+			System.out.println("Flag [true|false] para indicar si muestra solo los repetidos");
+			System.out.println("Patrón, con el que se va a indicar los tipos de archivos a considerar, por ejemplo *.jpg");
+//			System.out.		println("Indique una carpeta, opcionalmente un flag [true | false] para indicar si muestra solo los repetidos");
 		} else {
 			source = args[0];
 
@@ -204,7 +224,6 @@ public class SearchItSelf {
 			} else {
 				out = source;
 			}
-
 		}
 
 		return out;

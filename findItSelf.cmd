@@ -1,2 +1,2 @@
 @echo off
-java -classpath .\find.jar cl.SearchItSelf %1
+java -classpath bin cl.buildersoft.consoleUtils.SearchItSelf %*
