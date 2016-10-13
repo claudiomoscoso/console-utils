@@ -18,46 +18,45 @@ public class ImageResize {
 	}
 
 	public void execute(String[] args) {
-		if (args.length != 2) {
-			System.out.println("Params:");
-			int i = 0;
-			for (String arg : args) {
-				System.out.println("\t" + (i++) + " " + arg);
-			}
+		System.out.println("Params:");
+		int i = 0;
+		for (String arg : args) {
+			System.out.println("\t" + (i++) + " " + arg);
+		}
 
-		} else {
-			String path = args[0];
-			String destiny = args[1];
+		String path = args[0];
+		String destiny = args.length == 1 ? args[0] : args[1];
 
-			path = fixPath(path);
-			destiny = fixPath(destiny);
+		boolean onlyUpdate = false;
+		path = fixPath(path);
+		destiny = fixPath(destiny);
 
-			if (path.equalsIgnoreCase(destiny)) {
-				System.out.println(String.format("Paths '%s' and '%s' must be diferentes", path, destiny));
+		if (path.equalsIgnoreCase(destiny)) {
+			onlyUpdate = true;
+			// System.out.println(String.format("Paths '%s' and '%s' must be diferentes",
+			// path, destiny));
+		}
+
+		if (pathExists(path) && pathExists(destiny)) {
+			File pathO = new File(path);
+			if (!pathO.exists()) {
+				System.out.println(String.format("Path '%s' not exists", path));
 			} else {
-
-				if (pathExists(path) && pathExists(destiny)) {
-					File pathO = new File(path);
-					if (!pathO.exists()) {
-						System.out.println(String.format("Path '%s' not exists", path));
-					} else {
-						String[] files = pathO.list();
-						for (String file : files) {
-							// System.out.println("File:'" + file + "'");
-							if (isFile(path, file)) {
-								try {
-									resizeOneFile(path, file, destiny);
-								} catch (Exception e) {
-									System.err.println(String.format("Error procesing '%s'", path + file));
-									e.printStackTrace();
-								}
-							} else {
-								System.out.println(String.format("Ignored '%s'", path + file));
-							}
+				String[] files = pathO.list();
+				for (String file : files) {
+					// System.out.println("File:'" + file + "'");
+					if (isFile(path, file)) {
+						try {
+							resizeOneFile(path, file, destiny, onlyUpdate);
+						} catch (Exception e) {
+							System.err.println(String.format("Error procesing '%s'", path + file));
+							e.printStackTrace();
 						}
-						System.out.println("Process Finish");
+					} else {
+						System.out.println(String.format("Ignored '%s'", path + file));
 					}
 				}
+				System.out.println("Process Finish");
 			}
 		}
 	}
@@ -76,7 +75,7 @@ public class ImageResize {
 		return exists;
 	}
 
-	private void resizeOneFile(String path, String fileName, String destiny) throws IOException {
+	private void resizeOneFile(String path, String fileName, String destiny, boolean onlyUpdate) throws IOException {
 		String fn = path + fileName;
 		File file = new File(fn);
 		if (!file.exists()) {
@@ -85,11 +84,15 @@ public class ImageResize {
 			BufferedImage image = ImageIO.read(file);
 			String format = getFormat(file);
 			if (!isKnowFormat(format)) {
-				copyFile(path, fileName, destiny);
-				System.out.println(String.format("Formato no considerado '%s'", fn));
+				System.out.println(String.format("Formato no considerado '%s'%s", fn, onlyUpdate ? ", omited." : ""));
+				if (!onlyUpdate) {
+					copyFile(path, fileName, destiny);
+				}
 			} else if (!bigImage(image)) {
-				copyFile(path, fileName, destiny);
-				System.out.println(String.format("Is not big '%s'", fn));
+				System.out.println(String.format("Is not big '%s'%s", fn, onlyUpdate ? ", omited." : ""));
+				if (!onlyUpdate) {
+					copyFile(path, fileName, destiny);
+				}
 			} else {
 				int w = getWith(image);
 				int h = getHeigh(image);
@@ -168,7 +171,9 @@ public class ImageResize {
 	}
 
 	private static boolean bigImage(BufferedImage image) {
-		return image.getWidth() > 1024 || image.getHeight() > 768;
+		int w = image.getWidth();
+		int h = image.getHeight();
+		return w > 1024 || h > 768;
 	}
 
 	private static BufferedImage resizeImage(int w, int h, BufferedImage image, int type) {
